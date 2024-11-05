@@ -32,7 +32,7 @@ class MyMath {
         while ((guess - n / guess) > accuracy) {
             guess = (guess + n / guess) / 2
         }
-        return guess.toFixed(5)
+        return +guess.toFixed(5)
     }
 
     static abs(n) {
@@ -52,7 +52,7 @@ class QuadraticEquation {
     //  5 * X^0 + 4 * X^1 - 9.3 * X^2 = 1 * X^0
     //  3 * X^12 - 4 * X^1 + 5 * X^0 = 4 * X^0 - 1 * X^2
     #eqInfo = {}
-    #regexp = /^((\+)?|\-)(\d*\.?\d*)\s\*\sX\^\d+$/g
+    #regexp = /^(((\+)?|\-)(\d*\.?\d*))|\*|X\^\d+$/g
 
     constructor() {
         this.#equationRaw = (process.argv.slice(2)?.[0] ?? '')
@@ -80,7 +80,7 @@ class QuadraticEquation {
             return acc
         }, {})
 
-        this.#eqInfo = {...this.#eqInfo, ...info}
+        this.#eqInfo = { ...this.#eqInfo, ...info }
     }
 
     #getReducedEquation() {
@@ -90,19 +90,33 @@ class QuadraticEquation {
         return `${reducedForm.join(' ')} = 0`
     }
 
+    #check(arr) {
+        console.log(arr)
+        const isErr = false
+        const r1 = //g
+            arr.forEach((item) => (item === '*' || /\d+/g.test(item) || /\d/g.test))
+        return isErr
+    }
+
     #getEquationInfo() {
-        
         const arr = this.#equationRaw.replace(/\+\s/g, '+').replace(/\-\s/g, '-').split('=')
         console.log(arr)
         arr.forEach((el) => console.log(this.#regexp.test(el)))
 
         const [left, right] = arr.map((a) => a.split(' ').filter((i) => i))
+        this.#check([...left, ...right])
         const leftToMerge = left.map((item) => Number.isNaN(+item) ? item : +item)
         const rightToMerge = right.map((item) => Number.isNaN(+item) ? item : -+item)
-        const formToReduce = [...leftToMerge, ...rightToMerge]
-
 
         this.#getInfo([...leftToMerge, ...rightToMerge])
+    }
+
+    #solveComplex(d, a, b, c) {
+        const absD = MyMath.sqrt(MyMath.abs(d))
+        const rePart = +(-b / (2 * a)).toFixed(5)
+        const imPart = +(absD / (2 * a)).toFixed(5)
+
+        return this.#printAnswer(`Discriminant is strictly negative, the solution is:\n${rePart} - ${imPart}i\n${rePart} + ${imPart}i`)
     }
 
 
@@ -113,20 +127,23 @@ class QuadraticEquation {
 
     #solveEquation() {
         const [a, b, c] = ["2", "1", "0"].map((ind) => this.#getCoefficient(ind))
+
         if (a === 0 && b === 0 && c === 0) {
             return this.#printAnswer(`Both sides of equation are equal: infinite number of solutions.`)
         }
+
         const d = b * b - 4 * a * c
 
         if (d < 0) {
-            return this.#throwError(`Discriminant is strictly less than 0, I can't solve.`)
+            return this.#solveComplex(d, a, b, c)
+            // return this.#throwError(`Discriminant is strictly less than 0, I can't solve.`)
         }
         if (d === 0) {
-            return this.#printAnswer(`Discriminant is equal to zero, the solution is:\n${(-b) / (2 * a)}`)
+            return this.#printAnswer(`Discriminant is equal to zero, the solution is:\n${+((-b) / (2 * a)).toFixed(5)}`)
         }
 
-        const x1 = (-b + MyMath.sqrt(d)) / (2 * a)
-        const x2 = (-b - MyMath.sqrt(d)) / (2 * a)
+        const x1 = +((-b + MyMath.sqrt(d)) / (2 * a)).toFixed(5)
+        const x2 = +((-b - MyMath.sqrt(d)) / (2 * a)).toFixed(5)
 
         return this.#printAnswer(`Discriminant is strictly positive, the two solutions are:\n${x1}\n${x2}`)
 
